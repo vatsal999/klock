@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <ncurses.h>
 
-int charlist[50][5] = {
+const int charlist[50][5] = {
     // 0
     {1,1,1,1,1},
     {1,0,0,0,1},
@@ -68,19 +68,20 @@ int charlist[50][5] = {
     {0,0,0,0,1},
 };
 
-void renderdigit(int digit, int row, int col){
+void renderdigit(int digit, int row, int col, int digitnum){
     for(int i = 5 * digit ; i < (5*(digit+1)); i++){
         for(int j = 0; j < 5; j++){
-            move(row/2 - 4 + (i - digit*5),(col - 29)/2 + j);
+            // FIXME: hacky, make this more readable
+            move(row/2 - 4 + (i - digit*5),(digitnum - 1)*(5 + 2) + (col - 29)/2 + j);
             if(charlist[i][j]){
-                addch('@');
+                addch('0');
             }else{
                 addch(' ');
             }
         }
     }
-
 }
+
 
 struct clock{
     struct tm *t;
@@ -100,15 +101,24 @@ void init(){
     noecho();
     curs_set(0);
     start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
 }
 
 void signalhandler(int sig){
 }
 
+void update_time(time_t curt){
+    time(&curt);
+}
+
 int main(){
     struct clock *myclock;
     myclock = (struct clock *)malloc(sizeof(struct clock));
+
+    if ( myclock == NULL ){
+        fprintf(stderr, "ERROR: malloc error");
+        return -1;
+    }
 
     time_t curt;
     time(&curt);
@@ -135,9 +145,12 @@ int main(){
     init();
     getmaxyx(stdscr,row,col);
 
-    int digit = 9;
-    renderdigit(digit, row, col);
+    bool isrunning = true;
 
+    renderdigit(myclock->time.hour / 10 , row, col, 1);
+    renderdigit(myclock->time.hour % 10 , row, col, 2);
+    renderdigit(myclock->time.min / 10 , row, col, 3);
+    renderdigit(myclock->time.min % 10 , row, col, 4);
 
     /* mvprintw(row/2 - 4,(col - strlen(timestring1))/2,"%s",timestring1); */
     /* mvprintw(row/2 - 3,(col - strlen(timestring2))/2,"%s",timestring2); */
