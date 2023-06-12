@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <ncurses.h>
 
+#define CLOCK_CHAR '$'
+
 const int charlist[50][5] = {
     // 0
     {1,1,1,1,1},
@@ -74,7 +76,7 @@ void renderdigit(int digit, int row, int col, int digitnum){
             // FIXME: hacky, make this more readable
             move(row/2 - 4 + (i - digit*5),(digitnum - 1)*(5 + 2) + (col - 29)/2 + j);
             if(charlist[i][j]){
-                addch('0');
+                addch(CLOCK_CHAR);
             }else{
                 addch(' ');
             }
@@ -101,7 +103,13 @@ void init(){
     noecho();
     curs_set(0);
     start_color();
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(1, COLOR_RED , COLOR_BLACK);
+    init_pair(2, COLOR_GREEN , COLOR_BLACK);
+    init_pair(3, COLOR_YELLOW , COLOR_BLACK);
+    init_pair(4, COLOR_BLUE , COLOR_BLACK);
+    init_pair(5, COLOR_MAGENTA , COLOR_BLACK);
+    init_pair(6, COLOR_CYAN , COLOR_BLACK);
+    init_pair(7, COLOR_WHITE , COLOR_BLACK);
 }
 
 void signalhandler(int sig){
@@ -120,6 +128,7 @@ int main(){
         return -1;
     }
 
+
     time_t curt;
     time(&curt);
 
@@ -136,21 +145,57 @@ int main(){
     myclock->time.hour = myclock->t->tm_hour;
 
     int row,col;
+    bool isrunning = true;
+    int ch;
+    short color = 1;
+
     init();
     getmaxyx(stdscr,row,col);
 
-    bool isrunning = true;
+    while (isrunning) {
+        attron(COLOR_PAIR(color));
+        renderdigit(myclock->time.hour / 10 , row, col, 1);
+        renderdigit(myclock->time.hour % 10 , row, col, 2);
+        renderdigit(myclock->time.min / 10 , row, col, 3);
+        renderdigit(myclock->time.min % 10 , row, col, 4);
 
-    renderdigit(myclock->time.hour / 10 , row, col, 1);
-    renderdigit(myclock->time.hour % 10 , row, col, 2);
-    renderdigit(myclock->time.min / 10 , row, col, 3);
-    renderdigit(myclock->time.min % 10 , row, col, 4);
+        mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
+        attroff(COLOR_PAIR(color));
 
-    attron(COLOR_PAIR(1));
-    mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
-    attroff(COLOR_PAIR(1));
+        ch = getch();
+        switch(ch) {
+            case 'Q':
+            case 'q':
+                isrunning = false;
+                break;
+            case '1':
+                color = 1;
+                break;
+            case '2':
+                color = 2;
+                break;
+            case '3':
+                color = 3;
+                break;
+            case '4':
+                color = 4;
+                break;
+            case '5':
+                color = 5;
+                break;
+            case '6':
+                color = 6;
+                break;
+            case '7':
+                color = 7;
+                break;
+            default: 
+                break;
+        }
+
+        refresh();
+    }
     refresh();
-    getch();
     endwin();
     return 0;
 }
