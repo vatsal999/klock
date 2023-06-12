@@ -135,12 +135,6 @@ int main(){
     myclock->time.min = myclock->t->tm_min;
     myclock->time.hour = myclock->t->tm_hour;
 
-    char* timestring1 = "@@@@@  @@@@@     @@@@@  @@@@@";
-    char* timestring2 = "@   @  @   @  0  @   @  @   @";
-    char* timestring3 = "@   @  @   @     @   @  @   @";
-    char* timestring4 = "@   @  @   @  0  @   @  @   @";
-    char* timestring5 = "@@@@@  @@@@@     @@@@@  @@@@@";
-
     int row,col;
     init();
     getmaxyx(stdscr,row,col);
@@ -151,12 +145,6 @@ int main(){
     renderdigit(myclock->time.hour % 10 , row, col, 2);
     renderdigit(myclock->time.min / 10 , row, col, 3);
     renderdigit(myclock->time.min % 10 , row, col, 4);
-
-    /* mvprintw(row/2 - 4,(col - strlen(timestring1))/2,"%s",timestring1); */
-    /* mvprintw(row/2 - 3,(col - strlen(timestring2))/2,"%s",timestring2); */
-    /* mvprintw(row/2 - 2,(col - strlen(timestring3))/2,"%s",timestring3); */
-    /* mvprintw(row/2 - 1,(col - strlen(timestring4))/2,"%s",timestring4); */
-    /* mvprintw(row/2,(col - strlen(timestring5))/2,"%s",timestring5); */
 
     attron(COLOR_PAIR(1));
     mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
