@@ -151,6 +151,7 @@ int main(){
 
     init();
     getmaxyx(stdscr,row,col);
+    nodelay(stdscr, TRUE); // sets getch() to be non-blocking
 
     while (isrunning) {
         attron(COLOR_PAIR(color));
@@ -161,7 +162,37 @@ int main(){
 
         mvprintw(row/2 + 2, (col - strlen(date))/2, "%s", date);
         attroff(COLOR_PAIR(color));
-        // TODO: handle keyboard events without using switch case as it interferes with update_time
+
+        int ch = getch();
+        switch(ch) {
+            case 'Q':
+            case 'q':
+                isrunning = false;
+                break;
+            case '1':
+                color = 1;
+                break;
+            case '2':
+                color = 2;
+                break;
+            case '3':
+                color = 3;
+                break;
+            case '4':
+                color = 4;
+                break;
+            case '5':
+                color = 5;
+                break;
+            case '6':
+                color = 6;
+                break;
+            case '7':
+                color = 7;
+                break;
+            default:
+                break;
+        }
         update_time(myclock);
         refresh();
     }
