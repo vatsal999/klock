@@ -115,8 +115,14 @@ void init(){
 void signalhandler(int sig){
 }
 
-void update_time(time_t curt){
-    time(&curt);
+void update_time(struct clock *myclock){
+    time_t curt;
+    curt = time(NULL);
+    myclock->t = localtime(&curt);
+
+    myclock->time.sec = myclock->t->tm_sec;
+    myclock->time.min = myclock->t->tm_min;
+    myclock->time.hour = myclock->t->tm_hour;
 }
 
 int main(){
@@ -124,25 +130,19 @@ int main(){
     myclock = (struct clock *)malloc(sizeof(struct clock));
 
     if ( myclock == NULL ){
-        fprintf(stderr, "ERROR: malloc error");
+        fprintf(stderr, "ERROR: malloc error\n");
         return -1;
     }
 
+    update_time(myclock);
 
-    time_t curt;
-    time(&curt);
-
-    myclock->t = localtime(&curt);
     // format: Wed 31 May 2023
     if(strftime(myclock->date.datestring,sizeof(myclock->date.datestring), "%a %e %b %Y", myclock->t) == 0){
-        printf("ERROR: strftime returned 0\n");
+        fprintf(stderr, "ERROR: strftime returned 0\n");
         return -1;
     };
 
     char* date = myclock->date.datestring;
-    myclock->time.sec = myclock->t->tm_sec;
-    myclock->time.min = myclock->t->tm_min;
-    myclock->time.hour = myclock->t->tm_hour;
 
     int row,col;
     bool isrunning = true;
@@ -159,43 +159,12 @@ int main(){
         renderdigit(myclock->time.min / 10 , row, col, 3);
         renderdigit(myclock->time.min % 10 , row, col, 4);
 
-        mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
+        mvprintw(row/2 + 2, (col - strlen(date))/2, "%s", date);
         attroff(COLOR_PAIR(color));
-
-        ch = getch();
-        switch(ch) {
-            case 'Q':
-            case 'q':
-                isrunning = false;
-                break;
-            case '1':
-                color = 1;
-                break;
-            case '2':
-                color = 2;
-                break;
-            case '3':
-                color = 3;
-                break;
-            case '4':
-                color = 4;
-                break;
-            case '5':
-                color = 5;
-                break;
-            case '6':
-                color = 6;
-                break;
-            case '7':
-                color = 7;
-                break;
-            default: 
-                break;
-        }
-
+        // TODO: handle keyboard events without using switch case as it interferes with update_time
+        update_time(myclock);
         refresh();
     }
-    refresh();
     endwin();
     return 0;
 }
