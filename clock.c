@@ -74,7 +74,7 @@ void renderdigit(int digit, int row, int col, int digitnum){
     for(int i = 5 * digit ; i < (5*(digit+1)); i++){
         for(int j = 0; j < 5; j++){
             // FIXME: hacky, make this more readable
-            move(row/2 - 4 + (i - digit*5),(digitnum - 1)*(5 + 2) + (col - 29)/2 + j);
+            move(row/2 - 3 + (i - digit*5),(digitnum - 1)*(5 + 2) + (col - 29)/2 + j);
             if(charlist[i][j]){
                 addch(CLOCK_CHAR);
             }else{
@@ -127,7 +127,11 @@ void update_time(struct clock *myclock){
 
 int main(){
     struct clock *myclock;
+    struct timespec *ts;
     myclock = (struct clock *)malloc(sizeof(struct clock));
+    ts = (struct timespec *)malloc(sizeof(struct timespec));
+    ts->tv_sec = 0;
+    ts->tv_nsec = 1000000;
 
     if ( myclock == NULL ){
         fprintf(stderr, "ERROR: malloc error\n");
@@ -160,7 +164,7 @@ int main(){
         renderdigit(myclock->time.min / 10 , row, col, 3);
         renderdigit(myclock->time.min % 10 , row, col, 4);
 
-        mvprintw(row/2 + 2, (col - strlen(date))/2, "%s", date);
+        mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
         attroff(COLOR_PAIR(color));
 
         int ch = getch();
@@ -193,9 +197,12 @@ int main(){
             default:
                 break;
         }
+        nanosleep(ts, NULL);
         update_time(myclock);
         refresh();
     }
+    free(myclock);
+    free(ts);
     endwin();
     return 0;
 }
