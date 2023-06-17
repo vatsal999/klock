@@ -1,3 +1,4 @@
+// TODO: try clock_nanosleep
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +6,7 @@
 #include <signal.h>
 #include <ncurses.h>
 
-#define CLOCK_CHAR '$'
+#define CLOCK_CHAR '@'
 
 const int charlist[50][5] = {
     // 0
@@ -70,6 +71,8 @@ const int charlist[50][5] = {
     {0,0,0,0,1},
 };
 
+int row,col;
+
 void renderdigit(int digit, int row, int col, int digitnum){
     for(int i = 5 * digit ; i < (5*(digit+1)); i++){
         for(int j = 0; j < 5; j++){
@@ -113,6 +116,13 @@ void init(){
 }
 
 void signalhandler(int sig){
+    endwin();
+    // Needs to be called after an endwin() so ncurses will initialize
+    // itself with the new terminal dimensions.
+    refresh();
+    clear();
+    // updates row and col with new dimensions for renderdigit()
+    getmaxyx(stdscr,row,col); 
 }
 
 void update_time(struct clock *myclock){
@@ -148,7 +158,6 @@ int main(){
 
     char* date = myclock->date.datestring;
 
-    int row,col;
     bool isrunning = true;
     int ch;
     short color = 1;
@@ -156,6 +165,7 @@ int main(){
     init();
     getmaxyx(stdscr,row,col);
     nodelay(stdscr, TRUE); // sets getch() to be non-blocking
+    signal(SIGWINCH, signalhandler);
 
     while (isrunning) {
         attron(COLOR_PAIR(color));
