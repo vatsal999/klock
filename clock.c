@@ -1,4 +1,3 @@
-// TODO: try clock_nanosleep
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,11 +72,17 @@ const int charlist[50][5] = {
 
 int row,col;
 
-void renderdigit(int digit, int row, int col, int digitnum){
+void renderdigit(int digit, int digitnum){
     for(int i = 5 * digit ; i < (5*(digit+1)); i++){
         for(int j = 0; j < 5; j++){
             // FIXME: hacky, make this more readable
-            move(row/2 - 3 + (i - digit*5),(digitnum - 1)*(5 + 2) + (col - 29)/2 + j);
+            // FIXME: segmentation fault sometimes when resizing
+            int x = row/2 - 3 + (i - digit*5);
+            int y = (digitnum - 1)*(5 + 2) + (col - 29)/2 + j;
+            if(x < 0 || y < 0) {
+                return;
+            }
+            move(x,y);
             if(charlist[i][j]){
                 addch(CLOCK_CHAR);
             }else{
@@ -137,11 +142,11 @@ void update_time(struct clock *myclock){
 
 int main(){
     struct clock *myclock;
-    struct timespec *ts;
     myclock = (struct clock *)malloc(sizeof(struct clock));
-    ts = (struct timespec *)malloc(sizeof(struct timespec));
-    ts->tv_sec = 0;
-    ts->tv_nsec = 1000000;
+
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 1000000; // 1ms delay reduces cpu usage
 
     if ( myclock == NULL ){
         fprintf(stderr, "ERROR: malloc error\n");
@@ -169,12 +174,12 @@ int main(){
 
     while (isrunning) {
         attron(COLOR_PAIR(color));
-        renderdigit(myclock->time.hour / 10 , row, col, 1);
-        renderdigit(myclock->time.hour % 10 , row, col, 2);
-        renderdigit(myclock->time.min / 10 , row, col, 3);
-        renderdigit(myclock->time.min % 10 , row, col, 4);
+        renderdigit(myclock->time.hour / 10 , 1);
+        renderdigit(myclock->time.hour % 10 , 2);
+        renderdigit(myclock->time.min / 10 , 3);
+        renderdigit(myclock->time.min % 10 , 4);
 
-        mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
+        //mvprintw(row/2 + 3, (col - strlen(date))/2, "%s", date);
         attroff(COLOR_PAIR(color));
 
         int ch = getch();
@@ -207,12 +212,12 @@ int main(){
             default:
                 break;
         }
-        nanosleep(ts, NULL);
+        //TODO: try clock_nanosleep
+        nanosleep(&ts, NULL);
         update_time(myclock);
         refresh();
     }
     free(myclock);
-    free(ts);
     endwin();
     return 0;
 }
